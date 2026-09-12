@@ -8,10 +8,52 @@ const proxy = httpProxy.createProxyServer({
   changeOrigin: true,
 });
 
-// 1. Health checks and browser landing page
+// 1. Health checks and customized dark landing page
 const server = http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-  res.end('<!DOCTYPE html><html><body style="background:#121212;color:#eee;text-align:center;padding-top:60px;font-family:sans-serif;"><h1>🚪 Eaglercraft Gateway is Online</h1><p>Connect your Eaglercraft 1.12.2 client to: <code>wss://new-nqpf.onrender.com</code></p></body></html>');
+  res.end(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Restricted</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background-color: #0b0b0b;
+      color: #e0e0e0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      position: relative;
+    }
+    .top-left {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      letter-spacing: -0.2px;
+    }
+    .bottom-left {
+      position: absolute;
+      bottom: 18px;
+      left: 18px;
+    }
+    .bottom-right {
+      position: absolute;
+      bottom: 18px;
+      right: 18px;
+      color: #999;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-left">Not permitted to view yet.</div>
+  <div class="bottom-left">P.S change https:// to wss:// you bum.</div>
+  <div class="bottom-right">VEC.0.0.12</div>
+</body>
+</html>`);
 });
 
 // 2. Proxy WebSockets to Bungee cleanly
