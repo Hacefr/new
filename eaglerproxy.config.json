@@ -1,0 +1,21 @@
+{
+  "adapter": {
+    "motd": "§bEaglercraft 1.12 Gateway",
+    "skin": {
+      "skinUrl": true,
+      "allowCustomSkins": true
+    }
+  },
+  "server": {
+    "host": "157.85.94.60",
+    "port": 20929
+  },
+  "proxy": {
+    "host": "0.0.0.0",
+    "port": 10000
+  },
+  "security": {
+    "maxConnections": 60,
+    "rateLimit": false
+  }
+}
