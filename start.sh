@@ -17,5 +17,5 @@ for file in plugins/EaglercraftXServer/listeners.yml plugins/EaglercraftXBungee/
     fi
 done
 
-echo "==> [Gateway Door] Launching Java Waterfall proxy engine..."
-exec java -Xms128M -Xmx384M -XX:+UseG1GC -XX:G1HeapRegionSize=4M -XX:+UnlockExperimentalVMOptions -XX:+ParallelRefProcEnabled -XX:+AlwaysPreTouch -jar Waterfall.jar
+echo "==> [Gateway Door] Launching Java Waterfall proxy engine (headless)..."
+exec java -Xms128M -Xmx384M -XX:+UseG1GC -XX:G1HeapRegionSize=4M -XX:+UnlockExperimentalVMOptions -XX:+ParallelRefProcEnabled -XX:+AlwaysPreTouch -jar Waterfall.jar --noconsole
