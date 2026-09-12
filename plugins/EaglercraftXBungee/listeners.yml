@@ -1,5 +1,5 @@
 listeners:
-  - address: '0.0.0.0:25577'
+  - address: '0.0.0.0:10000'
     websocket_address: ''
     forward_ip: true
     forward_ip_header: 'X-Forwarded-For'
@@ -20,8 +20,7 @@ listeners:
     redirect_legacy_clients_to: ''
     server_icon: 'server-icon.png'
     server_motd:
-      - "&7&oSleepless nights..."
-      - "&e&lWE'RE BACK BABY &aSon I'm hungry"
+      - '&6An EaglercraftX server'
     allow_motd: true
     allow_query: true
     show_motd_player_list: true
