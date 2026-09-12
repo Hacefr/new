@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: eaglercraft-shockbyte-gateway
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: TARGET_HOST
+        value: 157.85.94.60
+      - key: TARGET_PORT
+        value: "20929"
+      - key: LOG_LEVEL
+        value: info
