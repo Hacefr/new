@@ -5,8 +5,8 @@ WORKDIR /app
 # Install bash, curl, and nodejs
 RUN apk add --no-cache curl bash nodejs
 
-# Download official Waterfall 1.20 (Build 556 LTS) directly from PaperMC
-RUN curl -fsSL -o Waterfall.jar "https://api.papermc.io/v2/projects/waterfall/versions/1.20/builds/556/downloads/waterfall-1.20-556.jar"
+# Download official Waterfall 1.20 from GeyserMC mirror
+RUN curl -fsSL -o Waterfall.jar "https://download.geysermc.org/v2/projects/waterfall/versions/1.20/builds/latest/downloads/waterfall"
 
 COPY . /app
 
