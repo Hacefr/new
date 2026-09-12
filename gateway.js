@@ -7,24 +7,36 @@ const server = http.createServer((req, res) => {
   res.end('<!DOCTYPE html><html><body style="background:#121212;color:#eee;text-align:center;padding-top:60px;font-family:sans-serif;"><h1>🚪 Eaglercraft Gateway is Online</h1><p>Connect your Eaglercraft 1.12.2 client to: <code>wss://new-nqpf.onrender.com</code></p></body></html>');
 });
 
-// 2. Bridge Eaglercraft WebSocket connections into Bungee on 25577
+// 2. Cleanly bridge Eaglercraft WebSocket stream into Bungee
 server.on('upgrade', (req, clientSocket, head) => {
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-  console.log(`==> [Bridge] Incoming Eaglercraft WebSocket connection from ${clientIp}`);
+  console.log(`==> [Bridge] Clean WebSocket connection from ${clientIp}`);
 
   clientSocket.resume();
 
   const upstream = net.connect({ port: 25577, host: '127.0.0.1' }, () => {
-    console.log('==> [Bridge] Linked to BungeeCord on 25577! Passing handshake...');
+    console.log('==> [Bridge] Connected to Bungee on 25577. Sending sanitized handshake...');
 
-    // Replay original WebSocket headers to Bungee
-    let raw = `${req.method} ${req.url} HTTP/${req.httpVersion}\r\n`;
-    for (let i = 0; i < req.rawHeaders.length; i += 2) {
-      raw += `${req.rawHeaders[i]}: ${req.rawHeaders[i + 1]}\r\n`;
+    // Build pure, standard RFC 6455 WebSocket headers (strips Render cloud junk)
+    const headers = [
+      `GET ${req.url} HTTP/1.1`,
+      `Host: 127.0.0.1:25577`,
+      `Upgrade: websocket`,
+      `Connection: Upgrade`,
+      `Sec-WebSocket-Key: ${req.headers['sec-websocket-key'] || ''}`,
+      `Sec-WebSocket-Version: ${req.headers['sec-websocket-version'] || '13'}`,
+    ];
+
+    if (req.headers['sec-websocket-protocol']) {
+      headers.push(`Sec-WebSocket-Protocol: ${req.headers['sec-websocket-protocol']}`);
     }
-    raw += '\r\n';
+    if (req.headers['sec-websocket-extensions']) {
+      headers.push(`Sec-WebSocket-Extensions: ${req.headers['sec-websocket-extensions']}`);
+    }
 
+    const raw = headers.join('\r\n') + '\r\n\r\n';
     upstream.write(raw);
+
     if (head && head.length > 0) upstream.write(head);
 
     // Bi-directional pipe
@@ -33,13 +45,12 @@ server.on('upgrade', (req, clientSocket, head) => {
   });
 
   upstream.on('data', (chunk) => {
-    // Log initial response from Bungee
-    const preview = chunk.slice(0, 30).toString().replace(/\r?\n/g, ' ');
-    console.log(`==> [Bridge] Bungee replied: "${preview}"`);
+    const preview = chunk.slice(0, 40).toString().replace(/\r?\n/g, ' ');
+    console.log(`==> [Bridge] Bungee response: "${preview}"`);
   });
 
   upstream.on('error', (err) => {
-    console.error('==> [Bridge] Upstream error connecting to Bungee:', err.message);
+    console.error('==> [Bridge] Upstream error:', err.message);
     clientSocket.destroy();
   });
 
