@@ -7,15 +7,14 @@ export function handleConnection(ws, req) {
   const sessionId = crypto.randomUUID().slice(0, 8);
   const clientIp = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress;
 
-  logger.info({ sessionId, clientIp }, 'New Eaglercraft WebSocket connection initiated');
+  logger.info({ sessionId, clientIp }, 'Eaglercraft client opened WebSocket connection');
 
-  // Open raw TCP socket to the Shockbyte Minecraft server
+  // Open TCP connection to the Shockbyte server
   const tcpSocket = net.connect({
     host: config.targetHost,
     port: config.targetPort,
   });
 
-  // Disable Nagle's algorithm for minimal packet latency
   tcpSocket.setNoDelay(true);
 
   let isCleanedUp = false;
@@ -24,7 +23,7 @@ export function handleConnection(ws, req) {
     if (isCleanedUp) return;
     isCleanedUp = true;
 
-    logger.info({ sessionId, reason }, 'Closing bridge connection session');
+    logger.info({ sessionId, reason }, 'Bridge session terminated');
 
     try {
       tcpSocket.destroy();
@@ -37,16 +36,16 @@ export function handleConnection(ws, req) {
     } catch (_) {}
   };
 
-  // TCP Socket (Shockbyte) Handlers
   tcpSocket.on('connect', () => {
-    logger.info({ sessionId, target: `${config.targetHost}:${config.targetPort}` }, 'Connected to Shockbyte server');
+    logger.info({ sessionId }, 'Successfully linked TCP socket to Shockbyte');
   });
 
   tcpSocket.on('data', (data) => {
+    logger.debug({ sessionId, bytes: data.length }, 'Received packet from Shockbyte -> sending to client');
     if (ws.readyState === ws.OPEN) {
       ws.send(data, { binary: true }, (err) => {
         if (err) {
-          logger.error({ sessionId, err: err.message }, 'Failed to deliver packet to WebSocket client');
+          logger.error({ sessionId, err: err.message }, 'Failed to deliver packet to WebSocket');
           cleanup('ws_send_error');
         }
       });
@@ -54,20 +53,23 @@ export function handleConnection(ws, req) {
   });
 
   tcpSocket.on('error', (err) => {
-    logger.error({ sessionId, err: err.message }, 'TCP socket error with Shockbyte server');
+    logger.error({ sessionId, err: err.message }, 'Shockbyte TCP error');
     cleanup('tcp_error');
   });
 
-  tcpSocket.on('close', () => {
+  tcpSocket.on('close', (hadError) => {
+    logger.warn({ sessionId, hadError }, 'Shockbyte closed the TCP connection');
     cleanup('tcp_closed');
   });
 
-  // WebSocket (Eaglercraft) Handlers
-  ws.on('message', (message) => {
+  ws.on('message', (message, isBinary) => {
+    const preview = Buffer.isBuffer(message) ? message.subarray(0, 16).toString('hex') : message.toString().slice(0, 32);
+    logger.info({ sessionId, isBinary, length: message.length, preview }, 'Received packet from Eaglercraft client');
+
     if (tcpSocket.writable) {
       tcpSocket.write(message, (err) => {
         if (err) {
-          logger.error({ sessionId, err: err.message }, 'Failed to write packet to Shockbyte server');
+          logger.error({ sessionId, err: err.message }, 'Failed to write to Shockbyte');
           cleanup('tcp_write_error');
         }
       });
@@ -80,6 +82,7 @@ export function handleConnection(ws, req) {
   });
 
   ws.on('close', (code, reason) => {
+    logger.info({ sessionId, code, reason: reason?.toString() }, 'Client closed WebSocket connection');
     cleanup(`ws_closed_${code}`);
   });
 }
