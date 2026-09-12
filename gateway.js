@@ -8,15 +8,18 @@ const server = http.createServer((req, res) => {
 
 server.on('upgrade', (req, clientSocket, head) => {
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-  console.log(`==> [Bridge] WebSocket connection from ${clientIp}`);
+  console.log(`==> [Bridge] Incoming connection from ${clientIp}`);
 
   clientSocket.resume();
+  clientSocket.setNoDelay(true);
 
   const upstream = net.connect({ port: 25577, host: '127.0.0.1' }, () => {
-    // Build full, authenticated proxy headers for EaglercraftXServer
+    upstream.setNoDelay(true);
+
+    // Standard client headers without the blocking Origin domain
     const headers = [
       `GET ${req.url} HTTP/1.1`,
-      `Host: ${req.headers['host'] || 'new-nqpf.onrender.com'}`,
+      `Host: 127.0.0.1:25577`,
       `Upgrade: websocket`,
       `Connection: Upgrade`,
       `Sec-WebSocket-Key: ${req.headers['sec-websocket-key'] || ''}`,
@@ -25,18 +28,7 @@ server.on('upgrade', (req, clientSocket, head) => {
       `X-Forwarded-Proto: https`,
     ];
 
-    if (req.headers['origin']) {
-      headers.push(`Origin: ${req.headers['origin']}`);
-    }
-    if (req.headers['sec-websocket-protocol']) {
-      headers.push(`Sec-WebSocket-Protocol: ${req.headers['sec-websocket-protocol']}`);
-    }
-    if (req.headers['sec-websocket-extensions']) {
-      headers.push(`Sec-WebSocket-Extensions: ${req.headers['sec-websocket-extensions']}`);
-    }
-
     const raw = headers.join('\r\n') + '\r\n\r\n';
-    console.log('==> [Bridge] Sending to Bungee:\n' + raw);
     upstream.write(raw);
 
     if (head && head.length > 0) upstream.write(head);
@@ -46,7 +38,8 @@ server.on('upgrade', (req, clientSocket, head) => {
   });
 
   upstream.on('data', (chunk) => {
-    console.log(`==> [Bridge] Bungee response: "${chunk.slice(0, 40).toString()}"`);
+    const preview = chunk.slice(0, 40).toString().replace(/\r?\n/g, ' ');
+    console.log(`==> [Bridge] Bungee response: "${preview}"`);
   });
 
   upstream.on('error', (err) => console.error('==> [Bridge] Upstream error:', err.message));
