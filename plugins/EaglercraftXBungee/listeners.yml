@@ -1,14 +1,13 @@
-# EaglercraftXBungee WebSocket Listener Configuration
-
+# EaglercraftXServer listener configuration
 listeners:
-  - address: 0.0.0.0:10000
+  - address: "0.0.0.0:10000"
     behind_reverse_proxy: true
     allow_proxy_protocol: false
     websocket_name: "Shockbyte Gateway"
     rate_limit:
       enable: false
     origin_whitelist: []
-    redirect_target: ""
+    redirect_target: "https://eaglercraft.com"
     enable_integrated_auth: false
     enable_integrated_skin: true
     enable_integrated_cape: true
