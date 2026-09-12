@@ -1,13 +1,67 @@
-# EaglercraftXServer listener configuration
 listeners:
-  - address: "0.0.0.0:10000"
-    behind_reverse_proxy: true
-    allow_proxy_protocol: false
-    websocket_name: "Shockbyte Gateway"
-    rate_limit:
-      enable: false
-    origin_whitelist: []
-    redirect_target: "https://eaglercraft.com"
-    enable_integrated_auth: false
-    enable_integrated_skin: true
-    enable_integrated_cape: true
+  - address: '0.0.0.0:10000'
+    websocket_address: ''
+    forward_ip: true
+    forward_ip_header: 'X-Forwarded-For'
+    forward_secret: false
+    forward_secret_header: 'X-Eagler-Secret'
+    forward_secret_file: 'eagler_forwarding.secret'
+    spoof_player_address_forwarded: true
+    dual_stack_haproxy_detection: false
+    force_disable_haproxy: false
+    tls_config:
+      enable_tls: false
+      require_tls: true
+      tls_managed_by_external_plugin: false
+      tls_public_chain_file: 'fullchain.pem'
+      tls_private_key_file: 'privatekey.pem'
+      tls_private_key_password: ''
+      tls_auto_refresh_cert: true
+    redirect_legacy_clients_to: ''
+    server_icon: 'server-icon.png'
+    server_motd:
+      - '&6An EaglercraftX server'
+    allow_motd: true
+    allow_query: true
+    show_motd_player_list: true
+    allow_cookie_revoke_query: true
+    request_motd_cache:
+      cache_ttl: 7200
+      online_server_list_animation: false
+      online_server_list_results: true
+      online_server_list_trending: true
+      online_server_list_portfolios: true
+    ratelimit:
+      ip:
+        enable: false
+        period: 90
+        limit: 60
+        limit_lockout: 80
+        lockout_duration: 1200
+      login:
+        enable: false
+        period: 50
+        limit: 5
+        limit_lockout: 10
+        lockout_duration: 300
+      motd:
+        enable: false
+        period: 30
+        limit: 5
+        limit_lockout: 15
+        lockout_duration: 300
+      query:
+        enable: false
+        period: 30
+        limit: 15
+        limit_lockout: 25
+        lockout_duration: 800
+      http:
+        enable: false
+        period: 30
+        limit: 10
+        limit_lockout: 20
+        lockout_duration: 300
+      disable_ratelimit:
+        - '127.0.0.0/8'
+        - '::1/128'
