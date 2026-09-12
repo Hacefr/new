@@ -1,5 +1,5 @@
 listeners:
-  - query_port: 25577
+  - query_port: 10000
     motd: "&bEaglercraft 1.12 Gateway"
     tab_list: GLOBAL_PING
     query_enabled: false
@@ -9,7 +9,7 @@ listeners:
     priorities:
       - shockbyte
     bind_local_address: true
-    host: 0.0.0.0:25577
+    host: 0.0.0.0:10000
     max_players: 60
     tab_size: 60
     force_default_server: true
