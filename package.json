@@ -2,14 +2,13 @@
   "name": "eaglercraft-shockbyte-gateway",
   "version": "1.0.0",
   "description": "Eaglercraft 1.12.2 to Java Minecraft Proxy Gateway",
-  "main": "src/index.js",
+  "main": "gateway.js",
   "type": "module",
   "scripts": {
-    "start": "node src/index.js"
+    "start": "node gateway.js"
   },
   "dependencies": {
-    "dotenv": "^16.4.5",
-    "eaglerproxy": "^1.2.5"
+    "http-proxy": "^1.18.1"
   },
   "engines": {
     "node": ">=18.0.0"
