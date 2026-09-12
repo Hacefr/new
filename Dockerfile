@@ -1,22 +1,14 @@
-FROM eclipse-temurin:17-jre-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Install curl and bash for clean downloading and running
-RUN apk add --no-cache curl bash
+# Install dependencies first for fast caching
+COPY package*.json ./
+RUN npm install
 
-# Download stable Waterfall (BungeeCord fork with better performance and low latency)
-RUN curl -o Waterfall.jar https://api.purpurmc.org/v2/purpur/1.20.4/latest/download || \
-    curl -o Waterfall.jar https://download.geysermc.org/v2/projects/waterfall/versions/1.20/builds/latest/downloads/waterfall
+# Copy application files
+COPY . .
 
-# Create directories for plugins and configuration
-RUN mkdir -p plugins
-
-# Expose Render's default web service port
 EXPOSE 10000
 
-# Copy startup script
-COPY start.sh /app/start.sh
-RUN chmod +x /app/start.sh
-
-CMD ["/bin/bash", "/app/start.sh"]
+CMD ["npm", "start"]
