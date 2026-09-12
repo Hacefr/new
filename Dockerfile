@@ -3,10 +3,13 @@ FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
 # Install bash, curl, and nodejs
-RUN apk add --no-cache curl bash nodejs
+RUN apk add --no-cache curl bash nodejs npm
 
-# Download official core (guaranteed 200 OK)
+# Download official core
 RUN curl -fsSL -o Waterfall.jar "https://ci.md-5.net/job/BungeeCord/lastSuccessfulBuild/artifact/bootstrap/target/BungeeCord.jar"
+
+COPY package*.json ./
+RUN npm install --production
 
 COPY . /app
 
