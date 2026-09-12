@@ -4,85 +4,8 @@ set -e
 # Copy any jar files found in subfolders up into plugins/
 find plugins -name "*.jar" -exec cp -n {} plugins/ \; 2>/dev/null || true
 
-echo "==> [Gateway Door] Creating 1.1.1 listeners.yml with forward_ip: true..."
-mkdir -p plugins/EaglercraftXServer
-
-cat << 'EOF' > plugins/EaglercraftXServer/listeners.yml
-listeners:
-  - address: '0.0.0.0:25577'
-    websocket_address: ''
-    forward_ip: true
-    forward_ip_header: 'X-Forwarded-For'
-    forward_secret: false
-    forward_secret_header: 'X-Eagler-Secret'
-    forward_secret_file: 'eagler_forwarding.secret'
-    spoof_player_address_forwarded: true
-    dual_stack_haproxy_detection: false
-    force_disable_haproxy: false
-    tls_config:
-      enable_tls: false
-      require_tls: true
-      tls_managed_by_external_plugin: false
-      tls_public_chain_file: 'fullchain.pem'
-      tls_private_key_file: 'privatekey.pem'
-      tls_private_key_password: ''
-      tls_auto_refresh_cert: true
-    redirect_legacy_clients_to: ''
-    server_icon: 'server-icon.png'
-    server_motd:
-      - '&6An EaglercraftX server'
-    allow_motd: true
-    allow_query: true
-    show_motd_player_list: true
-    allow_cookie_revoke_query: true
-    request_motd_cache:
-      cache_ttl: 7200
-      online_server_list_animation: false
-      online_server_list_results: true
-      online_server_list_trending: true
-      online_server_list_portfolios: true
-    ratelimit:
-      ip:
-        enable: false
-        period: 90
-        limit: 60
-        limit_lockout: 80
-        lockout_duration: 1200
-      login:
-        enable: false
-        period: 50
-        limit: 5
-        limit_lockout: 10
-        lockout_duration: 300
-      motd:
-        enable: false
-        period: 30
-        limit: 5
-        limit_lockout: 15
-        lockout_duration: 300
-      query:
-        enable: false
-        period: 30
-        limit: 15
-        limit_lockout: 25
-        lockout_duration: 800
-      http:
-        enable: false
-        period: 30
-        limit: 10
-        limit_lockout: 20
-        lockout_duration: 300
-      disable_ratelimit:
-        - '127.0.0.0/8'
-        - '::1/128'
-EOF
-
-cat << 'EOF' > plugins/EaglercraftXServer/settings.yml
-debug: true
-EOF
-
 echo "==> [Gateway Door] Launching Node.js bridge on port 10000..."
 node gateway.js &
 
-echo "==> [Gateway Door] Launching Waterfall on port 25577..."
-exec java -Xms128M -Xmx384M -Djava.net.preferIPv4Stack=true -XX:+UseG1GC -jar Waterfall.jar --noconsole
+echo "==> [Gateway Door] Launching Waterfall with packet logging..."
+exec java -Xms128M -Xmx384M -Djava.net.preferIPv4Stack=true -Dbungee.packet-decode-logging=true -XX:+UseG1GC -jar Waterfall.jar --noconsole
