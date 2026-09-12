@@ -20,7 +20,8 @@ listeners:
     redirect_legacy_clients_to: ''
     server_icon: 'server-icon.png'
     server_motd:
-      - '&6An EaglercraftX server'
+      - '&7&oSleepless nights...'
+      - "&e&lWE'RE BACK BABY &aSon I'm hungry"
     allow_motd: true
     allow_query: true
     show_motd_player_list: true
