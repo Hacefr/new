@@ -7,9 +7,9 @@ find plugins -name "*.jar" -exec cp -n {} plugins/ \; 2>/dev/null || true
 echo "==> [Gateway Door] Launching Node.js bridge on port 10000..."
 node gateway.js &
 
-# Automated Local Handshake Test
+# Automated Local Handshake Test (runs 40 seconds after boot)
 (
-    sleep 25
+    sleep 40
     echo "==> [SELF-TEST] Testing Bungee WebSocket handshake directly on localhost:25577..."
     node -e "
       import('node:net').then(net => {
@@ -24,5 +24,12 @@ node gateway.js &
     " 2>&1 || true
 ) &
 
-echo "==> [Gateway Door] Launching Waterfall on port 25577..."
-exec java -Xms128M -Xmx384M -Djava.net.preferIPv4Stack=true -XX:+UseG1GC -jar Waterfall.jar --noconsole
+echo "==> [Gateway Door] Launching Waterfall with Java 17 reflection flags..."
+exec java -Xms128M -Xmx384M \
+  --add-opens java.base/java.lang=ALL-UNNAMED \
+  --add-opens java.base/java.lang.reflect=ALL-UNNAMED \
+  --add-opens java.base/java.net=ALL-UNNAMED \
+  --add-opens java.base/java.util=ALL-UNNAMED \
+  -Djava.net.preferIPv4Stack=true \
+  -XX:+UseG1GC \
+  -jar Waterfall.jar --noconsole
