@@ -1,92 +1,49 @@
-import http from 'node:http';
-import { WebSocketServer } from 'ws';
-import { config } from './config.js';
-import { logger } from './logger.js';
-import { handleConnection } from './bridge.js';
+import 'dotenv/config';
+import { createRequire } from 'node:module';
 
-// 1. Create HTTP Server for Render health checks and browser visitors
-const server = http.createServer((req, res) => {
-  if (req.url === '/health') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ status: 'ok', timestamp: new Date().toISOString() }));
-    return;
-  }
+const require = createRequire(import.meta.url);
 
-  // Friendly web landing page for anyone opening the Render URL in a browser
-  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-  res.end(`
-    <!DOCTYPE html>
-    <html>
-      <head><title>Eaglercraft Gateway</title></head>
-      <body style="font-family: sans-serif; text-align: center; padding-top: 50px; background: #121212; color: #eee;">
-        <h1>🚪 Eaglercraft Gateway is Online</h1>
-        <p>Connect using your Eaglercraft 1.12.2 client to this URL over <code>wss://</code></p>
-        <p style="color: #888;">Target Server: ${config.targetHost}:${config.targetPort}</p>
-      </body>
-    </html>
-  `);
-});
+const PORT = parseInt(process.env.PORT || '10000', 10);
+const TARGET_HOST = process.env.TARGET_HOST || '157.85.94.60';
+const TARGET_PORT = parseInt(process.env.TARGET_PORT || '20929', 10);
 
-// 2. Initialize WebSocket Server attached to the HTTP server
-const wss = new WebSocketServer({ server });
+console.log(`[Door] Initializing Eaglercraft Gateway...`);
+console.log(`[Door] Port: ${PORT}`);
+console.log(`[Door] Target Server: ${TARGET_HOST}:${TARGET_PORT}`);
 
-wss.on('connection', (ws, req) => {
-  // Setup heartbeat state
-  ws.isAlive = true;
-  ws.on('pong', () => {
-    ws.isAlive = true;
-  });
+try {
+  const eaglerproxy = require('eaglerproxy');
+  const ProxyClass = eaglerproxy.Proxy || eaglerproxy.default || eaglerproxy;
 
-  handleConnection(ws, req);
-});
-
-// 3. Keep-alive heartbeat to prevent Render's proxy from idling out connections
-const heartbeatInterval = setInterval(() => {
-  for (const ws of wss.clients) {
-    if (ws.isAlive === false) {
-      logger.debug('Terminating inactive WebSocket client');
-      ws.terminate();
-      continue;
-    }
-    ws.isAlive = false;
-    ws.ping();
-  }
-}, 30000);
-
-wss.on('close', () => {
-  clearInterval(heartbeatInterval);
-});
-
-// 4. Start listening on the designated port
-server.listen(config.port, '0.0.0.0', () => {
-  logger.info(
-    {
-      port: config.port,
-      target: `${config.targetHost}:${config.targetPort}`,
-    },
-    '🚪 Eaglercraft WebSocket gateway door is open and listening'
-  );
-});
-
-// 5. Graceful shutdown handling
-const shutdown = (signal) => {
-  logger.info({ signal }, 'Received shutdown signal. Closing gateway gracefully...');
-
-  clearInterval(heartbeatInterval);
-
-  wss.close(() => {
-    server.close(() => {
-      logger.info('Server and all connections closed. Exiting process.');
-      process.exit(0);
+  if (typeof ProxyClass === 'function') {
+    const proxy = new ProxyClass({
+      host: '0.0.0.0',
+      port: PORT,
+      server: {
+        host: TARGET_HOST,
+        port: TARGET_PORT,
+      },
+      motd: '&bEaglercraft 1.12 Gateway',
+      skin: {
+        enableCustomSkins: true,
+      },
     });
-  });
 
-  // Force close if it takes too long
-  setTimeout(() => {
-    logger.error('Forced shutdown due to timeout.');
-    process.exit(1);
-  }, 10000);
-};
+    if (typeof proxy.start === 'function') {
+      proxy.start();
+    } else if (typeof proxy.listen === 'function') {
+      proxy.listen();
+    }
+  } else if (typeof eaglerproxy.start === 'function') {
+    eaglerproxy.start({
+      host: '0.0.0.0',
+      port: PORT,
+      server: { host: TARGET_HOST, port: TARGET_PORT },
+    });
+  }
 
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
+  console.log(`[Door] 🚪 Gateway is listening and ready for Eaglercraft connections!`);
+} catch (err) {
+  console.error('[Door] Fatal error during startup:', err);
+  process.exit(1);
+}
