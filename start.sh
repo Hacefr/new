@@ -4,12 +4,15 @@ set -e
 # Copy any jar files found in subfolders up into plugins/
 find plugins -name "*.jar" -exec cp -n {} plugins/ \; 2>/dev/null || true
 
-# Diagnostic background inspector: prints the generated listeners.yml after boot
+# Diagnostic: waits until the file is created, then prints the exact contents
 (
-    sleep 20
+    while [ ! -f "plugins/EaglercraftXServer/listeners.yml" ]; do
+        sleep 1
+    done
+    sleep 2
     echo "================================================"
-    echo "==> [DIAGNOSTIC] Actual generated listeners.yml:"
-    cat plugins/EaglercraftXServer/listeners.yml 2>/dev/null || echo "FILE NOT FOUND"
+    echo "==> [DIAGNOSTIC] Generated listeners.yml content:"
+    cat plugins/EaglercraftXServer/listeners.yml
     echo "================================================"
 ) &
 
