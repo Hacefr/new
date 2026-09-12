@@ -2,25 +2,35 @@ import http from 'node:http';
 import httpProxy from 'http-proxy';
 
 const proxy = httpProxy.createProxyServer({
-  target: 'ws://127.0.0.1:25577',
+  target: 'http://127.0.0.1:25577',
   ws: true,
-  changeOrigin: false,
+  changeOrigin: true,
 });
 
-// 1. Answer Render's health checks and web visitors
+// 1. Health checks and browser landing page
 const server = http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
   res.end('<!DOCTYPE html><html><body style="background:#121212;color:#eee;text-align:center;padding-top:60px;font-family:sans-serif;"><h1>🚪 Eaglercraft Gateway is Online</h1><p>Connect your Eaglercraft 1.12.2 client to: <code>wss://new-nqpf.onrender.com</code></p></body></html>');
 });
 
-// 2. Battle-tested WebSocket proxying directly into Bungee
+// 2. Cleanly proxy WebSockets without triggering Bungee security blocks
 server.on('upgrade', (req, socket, head) => {
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-  console.log(`==> [Bridge] Proxying WebSocket from ${clientIp} to Bungee...`);
+  console.log(`==> [Bridge] Authenticating client ${clientIp} into Bungee...`);
+
+  // Strip proxy headers so Bungee's forward_ip check doesn't hang up
+  delete req.headers['x-forwarded-for'];
+  delete req.headers['x-forwarded-proto'];
+  delete req.headers['x-forwarded-port'];
+  delete req.headers['x-forwarded-ssl'];
+  delete req.headers['origin'];
+
+  req.headers['host'] = '127.0.0.1:25577';
+
   proxy.ws(req, socket, head);
 });
 
-proxy.on('error', (err, req, res) => {
+proxy.on('error', (err) => {
   console.error('==> [Bridge] Proxy error:', err.message);
 });
 
