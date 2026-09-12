@@ -1,23 +1,18 @@
 {
   "name": "eaglercraft-shockbyte-gateway",
   "version": "1.0.0",
-  "description": "Standalone Eaglercraft 1.12.2 WebSocket to TCP gateway for Paper Minecraft",
+  "description": "Eaglercraft 1.12.2 to Java Minecraft Proxy Gateway",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "node --watch src/index.js"
-  },
-  "engines": {
-    "node": ">=18.0.0"
+    "start": "node src/index.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
-    "pino": "^9.0.0",
-    "ws": "^8.16.0"
+    "eaglerproxy": "^1.2.5"
   },
-  "devDependencies": {
-    "pino-pretty": "^11.0.0"
+  "engines": {
+    "node": ">=18.0.0"
   },
   "license": "MIT"
 }
