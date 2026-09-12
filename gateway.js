@@ -7,19 +7,22 @@ const server = http.createServer((req, res) => {
 });
 
 server.on('upgrade', (req, clientSocket, head) => {
-  console.log('==> [Bridge] Incoming headers:', JSON.stringify(req.headers));
+  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  console.log(`==> [Bridge] WebSocket connection from ${clientIp}`);
 
   clientSocket.resume();
 
   const upstream = net.connect({ port: 25577, host: '127.0.0.1' }, () => {
-    // Build standard WebSocket headers
+    // Build full, authenticated proxy headers for EaglercraftXServer
     const headers = [
       `GET ${req.url} HTTP/1.1`,
-      `Host: 127.0.0.1:25577`,
+      `Host: ${req.headers['host'] || 'new-nqpf.onrender.com'}`,
       `Upgrade: websocket`,
       `Connection: Upgrade`,
       `Sec-WebSocket-Key: ${req.headers['sec-websocket-key'] || ''}`,
       `Sec-WebSocket-Version: ${req.headers['sec-websocket-version'] || '13'}`,
+      `X-Forwarded-For: ${clientIp}`,
+      `X-Forwarded-Proto: https`,
     ];
 
     if (req.headers['origin']) {
